@@ -1,21 +1,33 @@
 import React, { useState } from 'react';
-import CameraCapture from './components/CameraCapture';
-import ResultDisplay from './components/ResultDisplay';
+import PhotoCapture from './components/PhotoCapture';
+import PhotoSelector from './components/PhotoSelector';
+import PhotoResult from './components/PhotoResult';
 import './App.css';
 
 function App() {
-  const [finalImageUrl, setFinalImageUrl] = useState(null);
+  // 단계: 'capture' → 'selection' → 'result'
+  const [stage, setStage] = useState('capture');
+  const [rawPhotos, setRawPhotos] = useState([]);
+  const [selectedPhotos, setSelectedPhotos] = useState([]);
 
-  // CameraCapture 컴포넌트에서 촬영 및 처리 후 data URL을 전달받음
-  const handleCapture = (dataURL) => {
-    setFinalImageUrl(dataURL);
+  // PhotoCapture 완료 시 원본 사진 배열을 받아 'selection' 단계로 이동
+  const handleCaptureComplete = (photos) => {
+    setRawPhotos(photos);
+    setStage('selection');
+  };
+
+  // PhotoSelector 완료 시 선택한 사진을 받아 'result' 단계로 이동
+  const handleSelectionComplete = (photos) => {
+    setSelectedPhotos(photos);
+    setStage('result');
   };
 
   return (
     <div className="App">
       <h1>인생네컷 스테가노그래피 웹앱</h1>
-      <CameraCapture onCapture={handleCapture} />
-      {finalImageUrl && <ResultDisplay imageUrl={finalImageUrl} />}
+      {stage === 'capture' && <PhotoCapture onComplete={handleCaptureComplete} />}
+      {stage === 'selection' && <PhotoSelector photos={rawPhotos} onSelectionComplete={handleSelectionComplete} />}
+      {stage === 'result' && <PhotoResult photos={selectedPhotos} />}
     </div>
   );
 }
