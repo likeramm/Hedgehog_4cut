@@ -10,7 +10,6 @@ function PhotoResult({ photos }) {
     frameImage.onload = () => {
       processAllPhotos(frameImage);
     };
-    // 오류 처리 시 콘솔 메시지 출력
     frameImage.onerror = () => {
       console.error("PhotoResult - 프레임 이미지 로드 실패");
     };
@@ -27,28 +26,37 @@ function PhotoResult({ photos }) {
       });
   };
 
-  // "포토샵" 효과를 위한 여러 필터 적용 후 처리
+  // Photoshop 효과: 밝기, 대비, 채도, 색조, 드롭 섀도우 효과 적용 후
+  // 프레임 오버레이와 스테가노그래피 처리
   const processPhoto = (photoDataURL, frameImage) => {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.crossOrigin = "anonymous"; // 필요 시
+      img.crossOrigin = "anonymous"; // CORS 문제 해결을 위해
       img.src = photoDataURL;
       img.onload = () => {
+        if (img.width === 0 || img.height === 0) {
+          return reject(new Error("이미지 크기가 0입니다."));
+        }
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
         canvas.height = img.height;
         const context = canvas.getContext('2d');
-        // Photoshop 효과: 밝기, 대비, 채도, 색조, 드롭 섀도우 효과
+
+        // Photoshop 효과 적용
         context.filter = 'brightness(1.2) contrast(1.3) saturate(1.4) hue-rotate(10deg) drop-shadow(5px 5px 10px rgba(0,0,0,0.3))';
         context.drawImage(img, 0, 0, canvas.width, canvas.height);
-        context.filter = 'none'; // 필터 초기화 후 프레임 적용
+        context.filter = 'none'; // 필터 리셋
+
         // 프레임 오버레이
         context.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
-        // 스테가노그래피 처리 (간단히 문자열 데이터를 빨간색 채널 LSB에 삽입)
+
+        // 스테가노그래피 처리: "Hidden Data"를 빨간색 채널 LSB에 삽입
         let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
         imageData = embedDataInImage(imageData, "Hidden Data");
         context.putImageData(imageData, 0, 0);
-        resolve(canvas.toDataURL('image/png'));
+
+        const processedDataURL = canvas.toDataURL('image/png');
+        resolve(processedDataURL);
       };
       img.onerror = (e) => {
         console.error("processPhoto - 이미지 로드 실패", e);
@@ -103,6 +111,7 @@ function PhotoResult({ photos }) {
       ) : (
         <p>사진 처리 중입니다... 잠시만 기다려 주세요.</p>
       )}
+      {/* 개별 처리된 사진과 QR 코드 영역 */}
       <div 
         className="result-grid" 
         style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}
@@ -123,7 +132,6 @@ function PhotoResult({ photos }) {
               }} 
             />
             <div style={{ marginTop: '5px', border: '1px solid #ccc', padding: '5px' }}>
-              {/* QR 코드 영역 – value에 data URL을 넣습니다. */}
               <QRCodeCanvas value={photo} size={128} />
             </div>
             <p>이미지 #{index + 1}</p>

@@ -42,3 +42,11 @@ button {
 .final-preview img {
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 }
+
+/* Mermaid 순서도 기본 스타일 */
+.mermaid {
+  font-family: 'trebuchet ms', Tahoma, Verdana, sans-serif;
+  background: #f4f4f4;
+  padding: 10px;
+  border-radius: 5px;
+}

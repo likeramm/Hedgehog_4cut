@@ -30,21 +30,21 @@ function PhotoCapture({ onComplete }) {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
 
-    // 비디오가 준비되지 않았다면 중단
+    // 비디오가 준비되지 않으면 경고
     if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
       console.warn("비디오가 아직 준비되지 않았습니다.");
       alert("비디오가 아직 준비되지 않았습니다. 잠시 후 다시 시도하세요.");
       return;
     }
-    
-    // 캔버스 크기 설정
+
+    // 캔버스 크기를 비디오 크기에 맞게 설정
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
-    // 현재 비디오 프레임 캡쳐
+    // 비디오 프레임 캡쳐
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // 프레임 이미지 로드 확인
+    // 프레임 이미지 로드 확인 후 처리
     if (!frameImageRef.current.complete) {
       console.warn("프레임 이미지가 아직 로드되지 않았습니다.");
       frameImageRef.current.onload = () => processPhoto(canvas, context);
@@ -53,18 +53,17 @@ function PhotoCapture({ onComplete }) {
     }
   };
 
-  // 프레임 오버레이 및 스테가노그래피 처리 후 dataURL 생성
   const processPhoto = (canvas, context) => {
-    // 프레임 이미지 오버레이
+    // 프레임 오버레이 적용
     context.drawImage(frameImageRef.current, 0, 0, canvas.width, canvas.height);
     
-    // 단순 스테가노그래피 처리 ("Hidden Data" 삽입)
+    // 간단한 스테가노그래피 처리: "Hidden Data"를 빨간색 채널 LSB에 삽입
     let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     imageData = embedDataInImage(imageData, "Hidden Data");
     context.putImageData(imageData, 0, 0);
 
     const dataURL = canvas.toDataURL('image/png');
-    console.log("사진 캡쳐 완료:", dataURL);
+    console.log("사진 캡쳐 완료:", dataURL.slice(0, 50) + "...");
     
     setPhotos(prev => {
       const newPhotos = [...prev, dataURL];
@@ -78,7 +77,6 @@ function PhotoCapture({ onComplete }) {
     setPhotoCount(prev => prev + 1);
   };
 
-  // 문자열을 이진 문자열로 변환 후 빨간색 채널 LSB에 삽입 (간단한 스테가노그래피)
   const embedDataInImage = (imageData, data) => {
     const binaryString = toBinaryString(data);
     const pixels = imageData.data;
@@ -120,9 +118,9 @@ function PhotoCapture({ onComplete }) {
       <button onClick={capturePhoto} disabled={photoCount >= maxPhotos}>
         사진 촬영 ({photoCount}/{maxPhotos})
       </button>
-      {/* 내부 처리용 캔버스 */}
+      {/* 내부 처리용 캔버스 (화면에 보이지 않음) */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
-      {/* 프레임 이미지 (public/frame.png) */}
+      {/* 프레임 이미지: public/frame.png */}
       <img
         ref={frameImageRef}
         src="/frame.png"

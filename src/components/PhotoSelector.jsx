@@ -5,7 +5,7 @@ function PhotoSelector({ photos, onSelectionComplete }) {
   const [selectedIndices, setSelectedIndices] = useState([]);
   const maxSelect = 4;
 
-  // 현재 선택한 사진 배열
+  // 선택된 사진 배열 (실시간 미리보기용)
   const selectedPhotos = selectedIndices.map(i => photos[i]);
 
   const toggleSelect = (index) => {
@@ -40,7 +40,7 @@ function PhotoSelector({ photos, onSelectionComplete }) {
         className="selector-container" 
         style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}
       >
-        {/* 왼쪽: 썸네일 선택 영역 */}
+        {/* 왼쪽: 전체 썸네일 영역 (번호 표시 포함) */}
         <div className="thumbnail-grid" style={{ flex: 1, paddingRight: '20px' }}>
           {photos.map((photo, index) => (
             <div
@@ -58,7 +58,7 @@ function PhotoSelector({ photos, onSelectionComplete }) {
                   borderRadius: '5px'
                 }} 
               />
-              {/* 선택된 경우, 오버레이 번호 표시 */}
+              {/* 선택된 경우 오버레이 번호 표시 */}
               {selectedIndices.includes(index) && (
                 <div style={{
                   position: 'absolute',
