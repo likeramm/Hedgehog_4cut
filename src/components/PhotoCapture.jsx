@@ -30,37 +30,35 @@ function PhotoCapture({ onComplete }) {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
 
-    // 비디오가 준비되지 않았다면
+    // 비디오가 준비되지 않았다면 중단
     if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
       console.warn("비디오가 아직 준비되지 않았습니다.");
       alert("비디오가 아직 준비되지 않았습니다. 잠시 후 다시 시도하세요.");
       return;
     }
     
-    // 캔버스 크기를 비디오 크기에 맞게 설정
+    // 캔버스 크기 설정
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
     // 현재 비디오 프레임 캡쳐
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // 프레임 이미지 로드 상태 확인
+    // 프레임 이미지 로드 확인
     if (!frameImageRef.current.complete) {
       console.warn("프레임 이미지가 아직 로드되지 않았습니다.");
-      frameImageRef.current.onload = () => {
-        processPhoto(canvas, context);
-      };
+      frameImageRef.current.onload = () => processPhoto(canvas, context);
     } else {
       processPhoto(canvas, context);
     }
   };
 
-  // 캡쳐된 사진에 프레임 및 스테가노그래피 처리
+  // 프레임 오버레이 및 스테가노그래피 처리 후 dataURL 생성
   const processPhoto = (canvas, context) => {
     // 프레임 이미지 오버레이
     context.drawImage(frameImageRef.current, 0, 0, canvas.width, canvas.height);
     
-    // 단순 스테가노그래피 처리 (빨간색 채널 LSB에 "Hidden Data" 삽입)
+    // 단순 스테가노그래피 처리 ("Hidden Data" 삽입)
     let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     imageData = embedDataInImage(imageData, "Hidden Data");
     context.putImageData(imageData, 0, 0);
@@ -80,7 +78,7 @@ function PhotoCapture({ onComplete }) {
     setPhotoCount(prev => prev + 1);
   };
 
-  // 문자열을 이진 문자열로 변환한 후 이미지의 빨간색 채널 LSB에 삽입
+  // 문자열을 이진 문자열로 변환 후 빨간색 채널 LSB에 삽입 (간단한 스테가노그래피)
   const embedDataInImage = (imageData, data) => {
     const binaryString = toBinaryString(data);
     const pixels = imageData.data;
@@ -124,7 +122,7 @@ function PhotoCapture({ onComplete }) {
       </button>
       {/* 내부 처리용 캔버스 */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
-      {/* 프레임 이미지 (public 폴더의 frame.png) */}
+      {/* 프레임 이미지 (public/frame.png) */}
       <img
         ref={frameImageRef}
         src="/frame.png"

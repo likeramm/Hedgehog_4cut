@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import SelectionFlowchart from './SelectionFlowchart';
 
 function PhotoSelector({ photos, onSelectionComplete }) {
   const [selectedIndices, setSelectedIndices] = useState([]);
@@ -31,6 +32,8 @@ function PhotoSelector({ photos, onSelectionComplete }) {
   return (
     <div className="photo-selector">
       <h2>6장의 사진 중 4장을 선택해주세요.</h2>
+      {/* 순서도 표시 */}
+      <SelectionFlowchart />
       <div className="photo-grid">
         {photos.map((photo, index) => (
           <div
