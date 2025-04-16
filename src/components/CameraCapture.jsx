@@ -1,4 +1,5 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React from 'react';
+import { QRCodeCanvas } from 'qrcode.react';
 
 function CameraCapture({ onCapture }) {
   const videoRef = useRef(null);
