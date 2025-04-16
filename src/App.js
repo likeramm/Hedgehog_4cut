@@ -1,35 +1,8 @@
-import React, { useState } from 'react';
-import PhotoCapture from './components/PhotoCapture';
-import PhotoSelector from './components/PhotoSelector';
-import PhotoResult from './components/PhotoResult';
-import './App.css';
+import React from 'react';
+import LifeFourCuts from './LifeFourCuts';
 
 function App() {
-  // 단계를 "capture" → "selection" → "result"로 전환합니다.
-  const [stage, setStage] = useState('capture');
-  const [rawPhotos, setRawPhotos] = useState([]);
-  const [selectedPhotos, setSelectedPhotos] = useState([]);
-
-  // PhotoCapture에서 6장의 사진 촬영 완료 시 호출
-  const handleCaptureComplete = (photos) => {
-    setRawPhotos(photos);
-    setStage('selection');
-  };
-
-  // PhotoSelector에서 4장의 사진 선택 완료 시 호출
-  const handleSelectionComplete = (photos) => {
-    setSelectedPhotos(photos);
-    setStage('result');
-  };
-
-  return (
-    <div className="App">
-      <h1>인생네컷 스테가노그래피 웹앱</h1>
-      {stage === 'capture' && <PhotoCapture onComplete={handleCaptureComplete} />}
-      {stage === 'selection' && <PhotoSelector photos={rawPhotos} onSelectionComplete={handleSelectionComplete} />}
-      {stage === 'result' && <PhotoResult photos={selectedPhotos} />}
-    </div>
-  );
+  return <LifeFourCuts />;
 }
 
 export default App;
