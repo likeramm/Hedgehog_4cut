@@ -6,7 +6,6 @@ function PhotoResult({ photos }) {
   const frameImageRef = useRef(null);
 
   useEffect(() => {
-    // 프레임 이미지 생성 (off-screen)
     const frameImage = new Image();
     frameImage.src = '/frame.png';
     frameImage.onload = () => {
@@ -14,7 +13,6 @@ function PhotoResult({ photos }) {
     };
   }, [photos]);
 
-  // 선택된 각 사진을 처리
   const processAllPhotos = (frameImage) => {
     const promises = photos.map(photo => processPhoto(photo, frameImage));
     Promise.all(promises).then(results => {
@@ -31,11 +29,8 @@ function PhotoResult({ photos }) {
         canvas.width = img.width;
         canvas.height = img.height;
         const context = canvas.getContext('2d');
-        // 원본 사진 그리기
         context.drawImage(img, 0, 0, canvas.width, canvas.height);
-        // 프레임 오버레이
         context.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
-        // 스테가노그래피 처리
         let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
         imageData = embedDataInImage(imageData, "Hidden Data");
         context.putImageData(imageData, 0, 0);
@@ -44,7 +39,6 @@ function PhotoResult({ photos }) {
     });
   };
 
-  // 간단한 스테가노그래피 함수 (빨간색 LSB에 데이터 삽입)
   const embedDataInImage = (imageData, data) => {
     const binaryString = toBinaryString(data);
     const pixels = imageData.data;

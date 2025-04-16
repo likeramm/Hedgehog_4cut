@@ -9,34 +9,44 @@ function PhotoCapture({ onComplete }) {
   const maxPhotos = 6;
 
   useEffect(() => {
-    // 웹캠 스트림 요청
     async function setupCamera() {
       try {
+        console.log("카메라 스트림 요청 중...");
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        console.log("카메라 스트림 성공:", stream);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
       } catch (error) {
         console.error("카메라 접근 에러:", error);
+        alert("카메라 접근 에러: " + error.message);
       }
     }
     setupCamera();
   }, []);
 
-  // 촬영 버튼 클릭 시 실행
   const capturePhoto = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
 
+    // 비디오가 준비되지 않았다면
+    if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
+      console.warn("비디오가 아직 준비되지 않았습니다.");
+      alert("비디오가 아직 준비되지 않았습니다. 잠시 후 다시 시도하세요.");
+      return;
+    }
+    
+    // 캔버스 크기를 비디오 크기에 맞게 설정
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
-    // 우선 비디오 프레임 캡쳐
+    // 현재 비디오 프레임 캡쳐
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // 프레임 이미지가 로드 안되었다면 onload 이벤트로 처리
+    // 프레임 이미지 로드 상태 확인
     if (!frameImageRef.current.complete) {
+      console.warn("프레임 이미지가 아직 로드되지 않았습니다.");
       frameImageRef.current.onload = () => {
         processPhoto(canvas, context);
       };
@@ -45,20 +55,24 @@ function PhotoCapture({ onComplete }) {
     }
   };
 
-  // 프레임 오버레이 및 스테가노그래피 처리 후 dataURL 생성
+  // 캡쳐된 사진에 프레임 및 스테가노그래피 처리
   const processPhoto = (canvas, context) => {
     // 프레임 이미지 오버레이
     context.drawImage(frameImageRef.current, 0, 0, canvas.width, canvas.height);
-    // 스테가노그래피 처리 (간단하게 "Hidden Data"를 빨간색 LSB에 삽입)
+    
+    // 단순 스테가노그래피 처리 (빨간색 채널 LSB에 "Hidden Data" 삽입)
     let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     imageData = embedDataInImage(imageData, "Hidden Data");
     context.putImageData(imageData, 0, 0);
+
     const dataURL = canvas.toDataURL('image/png');
-    // 배열에 추가
+    console.log("사진 캡쳐 완료:", dataURL);
+    
     setPhotos(prev => {
       const newPhotos = [...prev, dataURL];
+      console.log(`현재 사진 개수: ${newPhotos.length}/${maxPhotos}`);
       if (newPhotos.length === maxPhotos) {
-        // 6장이 모이면 부모 컴포넌트에 전달
+        console.log("6장 모두 촬영 완료. 다음 단계로 이동합니다.");
         onComplete(newPhotos);
       }
       return newPhotos;
@@ -66,7 +80,7 @@ function PhotoCapture({ onComplete }) {
     setPhotoCount(prev => prev + 1);
   };
 
-  // 간단한 스테가노그래피: 문자열의 각 비트를 빨간색 채널의 LSB에 삽입
+  // 문자열을 이진 문자열로 변환한 후 이미지의 빨간색 채널 LSB에 삽입
   const embedDataInImage = (imageData, data) => {
     const binaryString = toBinaryString(data);
     const pixels = imageData.data;
@@ -95,7 +109,15 @@ function PhotoCapture({ onComplete }) {
   return (
     <div className="photo-capture">
       <div className="camera-container">
-        <video ref={videoRef} autoPlay playsInline style={{ width: '100%', maxWidth: '600px' }} />
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          onLoadedMetadata={() => {
+            console.log("비디오 메타데이터 로드 완료:", videoRef.current.videoWidth, videoRef.current.videoHeight);
+          }}
+          style={{ width: '100%', maxWidth: '600px' }}
+        />
       </div>
       <button onClick={capturePhoto} disabled={photoCount >= maxPhotos}>
         사진 촬영 ({photoCount}/{maxPhotos})
@@ -103,10 +125,21 @@ function PhotoCapture({ onComplete }) {
       {/* 내부 처리용 캔버스 */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
       {/* 프레임 이미지 (public 폴더의 frame.png) */}
-      <img ref={frameImageRef} src="/frame.png" alt="Frame Overlay" style={{ display: 'none' }} />
+      <img
+        ref={frameImageRef}
+        src="/frame.png"
+        alt="Frame Overlay"
+        onLoad={() => console.log("프레임 이미지 로드 완료")}
+        style={{ display: 'none' }}
+      />
       <div className="thumbnail-container">
         {photos.map((photo, index) => (
-          <img key={index} src={photo} alt={`Thumbnail ${index + 1}`} style={{ width: '100px', margin: '5px' }} />
+          <img
+            key={index}
+            src={photo}
+            alt={`Thumbnail ${index + 1}`}
+            style={{ width: '100px', margin: '5px' }}
+          />
         ))}
       </div>
     </div>

@@ -30,7 +30,7 @@ function PhotoSelector({ photos, onSelectionComplete }) {
 
   return (
     <div className="photo-selector">
-      <h2>6장의 사진 중에서 4장을 선택해주세요.</h2>
+      <h2>6장의 사진 중 4장을 선택해주세요.</h2>
       <div className="photo-grid">
         {photos.map((photo, index) => (
           <div
