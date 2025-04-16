@@ -18,13 +18,27 @@ button {
   margin-top: 10px;
 }
 
-/* PhotoSelector 항목 선택 스타일 */
+/* PhotoSelector 썸네일 항목 스타일 */
 .photo-item {
   display: inline-block;
   border: 2px solid transparent;
   cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.photo-item:hover {
+  transform: scale(1.05);
 }
 
 .photo-item.selected {
   border: 2px solid #007bff;
+}
+
+/* 기본 미리보기 이미지 스타일 */
+.selected-preview img {
+  border-radius: 5px;
+}
+
+.final-preview img {
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 }
