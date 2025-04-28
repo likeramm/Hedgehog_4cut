@@ -1,54 +1,57 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { QRCodeCanvas } from 'qrcode.react'; // 최신버전에서는 이렇게 { }로
+import { QRCodeCanvas } from 'qrcode.react';
 
 const PreviewAndQRCode = ({ selectedPhotos }) => {
   const canvasRef = useRef(null);
   const [finalImageURL, setFinalImageURL] = useState('');
+  const [uploadedURL, setUploadedURL] = useState('');
 
+  const imgbbAPIKey = '12d36b9a759404b3cebed257e0088a2e'; // 여기 본인 API 키 입력
+  
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    const frameWidth = 480;
-    const frameHeight = 640;
-    const margin = 10;
-
+    
     if (!canvas || selectedPhotos.length !== 4) return;
-
-    canvas.width = frameWidth;
-    canvas.height = frameHeight * 4 + margin * 5;
-
-    const loadImage = (src) => {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.src = src;
-        img.onload = () => resolve(img);
-        img.onerror = (e) => reject(e);
-      });
-    };
-
+  
+    canvas.width = 620;
+    canvas.height = 920;
+  
     const drawImages = async () => {
-      try {
-        const images = await Promise.all(selectedPhotos.map(loadImage));
-
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        images.forEach((img, index) => {
-          const photoWidth = frameWidth * 0.8;
-          const photoHeight = frameHeight * 0.8;
-          const x = (canvas.width - photoWidth) / 2;
-          const y = margin * (index + 1) + frameHeight * index + ((frameHeight - photoHeight) / 2);
-          ctx.drawImage(img, x, y, photoWidth, photoHeight);
+      const rows = 2;
+      const cols = 2;
+      const cellWidth = canvas.width / cols;
+      const cellHeight = canvas.height / rows;
+  
+      // 1. 사진 4장 먼저 2x2로 그리기
+      for (let i = 0; i < selectedPhotos.length; i++) {
+        const img = new Image();
+        img.src = selectedPhotos[i];
+        await new Promise((resolve) => {
+          img.onload = () => {
+            const x = (i % cols) * cellWidth;
+            const y = Math.floor(i / cols) * cellHeight;
+            ctx.drawImage(img, x, y, cellWidth, cellHeight);
+            resolve();
+          };
         });
-
-        setFinalImageURL(canvas.toDataURL('image/png'));
-      } catch (err) {
-        console.error('이미지 로딩 실패', err);
       }
+  
+      // 2. 그 다음 프레임 덮어쓰기
+      const frameImage = new Image();
+      frameImage.src = '/frame.png';
+      await new Promise((resolve) => {
+        frameImage.onload = () => {
+          ctx.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
+          resolve();
+        };
+      });
+  
+      setFinalImageURL(canvas.toDataURL('image/png'));
     };
-
+  
     drawImages();
-  }, [selectedPhotos]);
+  }, [selectedPhotos]);  
 
   return (
     <div className="preview-qrcode">
@@ -63,9 +66,15 @@ const PreviewAndQRCode = ({ selectedPhotos }) => {
             </a>
           </div>
           <div style={{ marginTop: '20px' }}>
-            <QRCodeCanvas value={finalImageURL} size={200} /> {/* 여기 QRCodeCanvas 사용 */}
+          <QRCodeCanvas value={finalImageURL} size={200} />
           </div>
         </>
+      )}
+      {uploadedURL && (
+        <div style={{ marginTop: '20px' }}>
+          <h4>QR 코드로 다운로드:</h4>
+          <QRCodeCanvas value={uploadedURL} size={200} />
+        </div>
       )}
     </div>
   );

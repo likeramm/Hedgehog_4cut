@@ -6,11 +6,16 @@ const CameraCapture = ({ onPhotosCaptured }) => {
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
 
-  // ⭐ isCameraOn이 true가 되고 나서 비디오가 뜨면 카메라 연결!
   useEffect(() => {
     const startCamera = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            aspectRatio: 16 / 9,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
@@ -34,8 +39,8 @@ const CameraCapture = ({ onPhotosCaptured }) => {
       return;
     }
     const canvas = document.createElement('canvas');
-    canvas.width = 480;
-    canvas.height = 640;
+    canvas.width = 1280;
+    canvas.height = 720;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
     const image = canvas.toDataURL('image/png');
@@ -59,11 +64,13 @@ const CameraCapture = ({ onPhotosCaptured }) => {
           <video
             ref={videoRef}
             autoPlay
-            width="240"
-            height="320"
+            playsInline
+            width="320"
+            height="180"
             onLoadedMetadata={() => setIsVideoReady(true)}
+            style={{ borderRadius: '12px', backgroundColor: 'black' }}
           />
-          <div>
+          <div style={{ marginTop: '10px' }}>
             <button onClick={takePhoto}>사진 찍기 ({photos.length}/6)</button>
             <button onClick={finishCapture} disabled={photos.length !== 6}>
               완료
