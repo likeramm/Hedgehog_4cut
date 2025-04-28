@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/Hedgehog_4cut/static/css/main.5bddf06e.css",
+    "main.js": "/Hedgehog_4cut/static/js/main.afa54a81.js",
+    "index.html": "/Hedgehog_4cut/index.html",
+    "main.5bddf06e.css.map": "/Hedgehog_4cut/static/css/main.5bddf06e.css.map",
+    "main.afa54a81.js.map": "/Hedgehog_4cut/static/js/main.afa54a81.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.5bddf06e.css",
+    "static/js/main.afa54a81.js"
+  ]
+}
