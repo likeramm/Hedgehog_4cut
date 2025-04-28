@@ -1,50 +1,65 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
+import axios from 'axios'; // 추가 설치 필요: npm install axios
 
 const PreviewAndQRCode = ({ selectedPhotos }) => {
   const canvasRef = useRef(null);
   const [finalImageURL, setFinalImageURL] = useState('');
+  const [uploadedURL, setUploadedURL] = useState('');
+
+  const imgbbAPIKey = 'ddd'; // 여기 본인 API 키 입력
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    const frameWidth = 480;
-    const frameHeight = 640;
+    const frameWidth = 1280;
+    const frameHeight = 720;
     const margin = 10;
 
-    // 캔버스 크기는 프레임 배경 크기에 맞춰야 해!
+    if (!canvas || selectedPhotos.length !== 4) return;
+
     canvas.width = frameWidth;
     canvas.height = frameHeight * 4 + margin * 5;
 
-    const drawImages = async () => {
-      // 1. 프레임 이미지 먼저 그리기
-      const frameImage = new Image();
-      frameImage.src = '/frame.png'; // public 안에 frame.png
-      await new Promise((resolve) => {
-        frameImage.onload = () => {
-          ctx.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
-          resolve();
-        };
-      });
-
-      // 2. 선택된 사진들 그리기
-      for (let i = 0; i < selectedPhotos.length; i++) {
+    const loadImage = (src) => {
+      return new Promise((resolve, reject) => {
         const img = new Image();
-        img.src = selectedPhotos[i];
-        await new Promise((resolve) => {
-          img.onload = () => {
-            // 프레임의 사진 위치에 맞춰서 조정해서 그려야 예쁨!
-            const photoWidth = frameWidth * 0.8;  // 사진 크기 조정
-            const photoHeight = frameHeight * 0.8;
-            const x = (canvas.width - photoWidth) / 2; // 가운데 정렬
-            const y = margin * (i + 1) + (frameHeight * i) + ((frameHeight - photoHeight) / 2);
-            ctx.drawImage(img, x, y, photoWidth, photoHeight);
-            resolve();
-          };
-        });
-      }
+        img.crossOrigin = "anonymous"; // 중요! CORS 문제 방지
+        img.src = src;
+        img.onload = () => resolve(img);
+        img.onerror = (e) => reject(e);
+      });
+    };
 
-      setFinalImageURL(canvas.toDataURL('image/png'));
+    const drawImages = async () => {
+      try {
+        const images = await Promise.all(selectedPhotos.map(loadImage));
+
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        images.forEach((img, index) => {
+          const photoWidth = frameWidth * 0.8;
+          const photoHeight = frameHeight * 0.8;
+          const x = (canvas.width - photoWidth) / 2;
+          const y = margin * (index + 1) + frameHeight * index + ((frameHeight - photoHeight) / 2);
+          ctx.drawImage(img, x, y, photoWidth, photoHeight);
+        });
+
+        const dataURL = canvas.toDataURL('image/png');
+        setFinalImageURL(dataURL);
+
+        // 👇 여기서 imgbb에 업로드
+        const formData = new FormData();
+        formData.append('image', dataURL.split(',')[1]);
+
+        const response = await axios.post(`https://api.imgbb.com/1/upload?key=${imgbbAPIKey}`, formData);
+        console.log('imgbb 업로드 결과:', response.data);
+
+        setUploadedURL(response.data.data.url); // 업로드된 짧은 URL 저장
+      } catch (err) {
+        console.error('이미지 처리 실패', err);
+      }
     };
 
     drawImages();
@@ -62,10 +77,13 @@ const PreviewAndQRCode = ({ selectedPhotos }) => {
               <button>다운로드</button>
             </a>
           </div>
-          <div style={{ marginTop: '20px' }}>
-          <QRCodeCanvas value={finalImageURL} size={200} />
-          </div>
         </>
+      )}
+      {uploadedURL && (
+        <div style={{ marginTop: '20px' }}>
+          <h4>QR 코드로 다운로드:</h4>
+          <QRCodeCanvas value={uploadedURL} size={200} />
+        </div>
       )}
     </div>
   );

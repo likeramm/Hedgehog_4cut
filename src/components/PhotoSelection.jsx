@@ -26,18 +26,34 @@ const PhotoSelection = ({ photos, onSelectionComplete }) => {
   return (
     <div className="photo-selection">
       <h3>사진을 4장 선택하세요 (순서 중요)</h3>
-      <div className="photo-grid">
+      <div className="photo-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
         {photos.map((photo, index) => (
-          <img
+          <div
             key={index}
-            src={photo}
-            alt={`촬영된 사진 ${index}`}
-            className={selectedPhotos.includes(photo) ? 'selected' : ''}
             onClick={() => selectPhoto(photo)}
-          />
+            style={{
+              width: '240px',       // ✅ 16
+              height: '135px',      // ✅ 9 (16:9 비율 맞춤)
+              position: 'relative',
+              border: selectedPhotos.includes(photo) ? '3px solid blue' : '1px solid #ccc',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              cursor: 'pointer',
+            }}
+          >
+            <img
+              src={photo}
+              alt={`촬영된 사진 ${index}`}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover', // 비율 유지하며 채우기
+              }}
+            />
+          </div>
         ))}
       </div>
-      <div>
+      <div style={{ marginTop: '20px' }}>
         <button onClick={handleComplete} disabled={selectedPhotos.length !== 4}>
           선택 완료
         </button>
