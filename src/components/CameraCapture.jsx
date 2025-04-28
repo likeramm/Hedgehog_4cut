@@ -4,18 +4,24 @@ const CameraCapture = ({ onPhotosCaptured }) => {
   const videoRef = useRef(null);
   const [photos, setPhotos] = useState([]);
   const [isCameraOn, setIsCameraOn] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
 
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      videoRef.current.srcObject = stream;
-      setIsCameraOn(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
     } catch (err) {
       alert('카메라를 사용할 수 없습니다: ' + err.message);
     }
   };
 
   const takePhoto = () => {
+    if (!videoRef.current || !isVideoReady) {
+      alert('카메라가 아직 준비되지 않았습니다.');
+      return;
+    }
     if (photos.length >= 6) {
       alert('6장까지 촬영할 수 있습니다.');
       return;
@@ -40,13 +46,23 @@ const CameraCapture = ({ onPhotosCaptured }) => {
   return (
     <div className="camera-capture">
       {!isCameraOn ? (
-        <button onClick={startCamera}>카메라 시작</button>
+        <button onClick={() => { setIsCameraOn(true); startCamera(); }}>
+          카메라 시작
+        </button>
       ) : (
         <>
-          <video ref={videoRef} autoPlay width="240" height="320" />
+          <video
+            ref={videoRef}
+            autoPlay
+            width="240"
+            height="320"
+            onLoadedMetadata={() => setIsVideoReady(true)}
+          />
           <div>
             <button onClick={takePhoto}>사진 찍기 ({photos.length}/6)</button>
-            <button onClick={finishCapture} disabled={photos.length !== 6}>완료</button>
+            <button onClick={finishCapture} disabled={photos.length !== 6}>
+              완료
+            </button>
           </div>
         </>
       )}
